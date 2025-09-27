@@ -1,0 +1,189 @@
+[
+  {
+    "model": "authentication.role",
+    "pk": 1,
+    "fields": {
+      "name": "Polinizador",
+      "description": "Usuario especializado en procesos de polinización de plantas",
+      "permissions": {
+        "modules": ["pollination"],
+        "can_create": true,
+        "can_read": true,
+        "can_update": true,
+        "can_delete": false,
+        "can_generate_reports": false
+      },
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authentication.role",
+    "pk": 2,
+    "fields": {
+      "name": "Germinador",
+      "description": "Usuario especializado en procesos de germinación de semillas",
+      "permissions": {
+        "modules": ["germination"],
+        "can_create": true,
+        "can_read": true,
+        "can_update": true,
+        "can_delete": false,
+        "can_generate_reports": false
+      },
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authentication.role",
+    "pk": 3,
+    "fields": {
+      "name": "Secretaria",
+      "description": "Usuario con acceso a gestión de registros y soporte administrativo",
+      "permissions": {
+        "modules": ["pollination", "germination", "alerts"],
+        "can_create": true,
+        "can_read": true,
+        "can_update": true,
+        "can_delete": false,
+        "can_generate_reports": false
+      },
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "authentication.role",
+    "pk": 4,
+    "fields": {
+      "name": "Administrador",
+      "description": "Usuario con acceso completo al sistema incluyendo reportes y gestión de usuarios",
+      "permissions": {
+        "modules": ["pollination", "germination", "alerts", "reports", "authentication"],
+        "can_create": true,
+        "can_read": true,
+        "can_update": true,
+        "can_delete": true,
+        "can_generate_reports": true
+      },
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "pollination.pollinationtype",
+    "pk": 1,
+    "fields": {
+      "name": "Self",
+      "description": "Autopolinización - proceso donde la planta se poliniza a sí misma",
+      "requires_father_plant": false,
+      "allows_different_species": false,
+      "maturation_days": 120,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "pollination.pollinationtype",
+    "pk": 2,
+    "fields": {
+      "name": "Sibling",
+      "description": "Polinización entre hermanos - proceso entre plantas de la misma progenie",
+      "requires_father_plant": true,
+      "allows_different_species": false,
+      "maturation_days": 120,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "pollination.pollinationtype",
+    "pk": 3,
+    "fields": {
+      "name": "Híbrido",
+      "description": "Hibridación - proceso entre plantas de diferentes especies para crear híbridos",
+      "requires_father_plant": true,
+      "allows_different_species": true,
+      "maturation_days": 120,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "alerts.alerttype",
+    "pk": 1,
+    "fields": {
+      "name": "semanal",
+      "description": "Alerta generada semanalmente para revisión de registros",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "alerts.alerttype",
+    "pk": 2,
+    "fields": {
+      "name": "preventiva",
+      "description": "Alerta preventiva generada una semana antes de fechas importantes",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "alerts.alerttype",
+    "pk": 3,
+    "fields": {
+      "name": "frecuente",
+      "description": "Alerta frecuente para recordatorios diarios durante semanas importantes",
+      "is_active": true,
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "reports.reporttype",
+    "pk": 1,
+    "fields": {
+      "name": "pollination",
+      "display_name": "Reporte de Polinización",
+      "description": "Reporte detallado de registros de polinización con estadísticas y análisis",
+      "is_active": true,
+      "template_name": "reports/pollination_report.html",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "reports.reporttype",
+    "pk": 2,
+    "fields": {
+      "name": "germination",
+      "display_name": "Reporte de Germinación",
+      "description": "Reporte detallado de registros de germinación con tasas de éxito y análisis",
+      "is_active": true,
+      "template_name": "reports/germination_report.html",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "reports.reporttype",
+    "pk": 3,
+    "fields": {
+      "name": "statistical",
+      "display_name": "Reporte Estadístico",
+      "description": "Reporte estadístico consolidado con análisis comparativo de polinización y germinación",
+      "is_active": true,
+      "template_name": "reports/statistical_report.html",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

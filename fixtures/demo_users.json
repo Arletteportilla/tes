@@ -1,0 +1,71 @@
+[
+  {
+    "model": "authentication.customuser",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$demo123$hash",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "demo.polinizador",
+      "first_name": "Demo",
+      "last_name": "Polinizador",
+      "email": "demo.polinizador@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z",
+      "role": 1,
+      "employee_id": "DEMO001",
+      "phone_number": "+1234567890",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "authentication.customuser",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$demo123$hash",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "demo.germinador",
+      "first_name": "Demo",
+      "last_name": "Germinador",
+      "email": "demo.germinador@example.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z",
+      "role": 2,
+      "employee_id": "DEMO002",
+      "phone_number": "+1234567891",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "authentication.customuser",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$600000$demo123$hash",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "demo.admin",
+      "first_name": "Demo",
+      "last_name": "Admin",
+      "email": "demo.admin@example.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2024-01-01T00:00:00Z",
+      "role": 4,
+      "employee_id": "DEMO003",
+      "phone_number": "+1234567892",
+      "created_at": "2024-01-01T00:00:00Z",
+      "updated_at": "2024-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]
