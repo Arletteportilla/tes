@@ -1,0 +1,57 @@
+[
+  {
+    "model": "germination.germinationcondition",
+    "pk": 1,
+    "fields": {
+      "climate": "C",
+      "substrate": "Turba",
+      "location": "Cámara fría controlada",
+      "substrate_details": "Turba pura con drenaje excelente",
+      "notes": "Condiciones frías para especies de alta montaña"
+    }
+  },
+  {
+    "model": "germination.germinationcondition",
+    "pk": 2,
+    "fields": {
+      "climate": "IC",
+      "substrate": "Musgo sphagnum",
+      "location": "Invernadero templado",
+      "substrate_details": "Musgo sphagnum húmedo con perlita",
+      "notes": "Condiciones templadas para especies intermedias"
+    }
+  },
+  {
+    "model": "germination.germinationcondition",
+    "pk": 3,
+    "fields": {
+      "climate": "I",
+      "substrate": "Corteza de pino",
+      "location": "Invernadero estándar",
+      "substrate_details": "Corteza de pino fina con vermiculita",
+      "notes": "Condiciones estándar para la mayoría de especies"
+    }
+  },
+  {
+    "model": "germination.germinationcondition",
+    "pk": 4,
+    "fields": {
+      "climate": "IW",
+      "substrate": "Mezcla personalizada",
+      "location": "Invernadero cálido",
+      "substrate_details": "Mezcla de turba, perlita y corteza",
+      "notes": "Condiciones cálidas para especies subtropicales"
+    }
+  },
+  {
+    "model": "germination.germinationcondition",
+    "pk": 5,
+    "fields": {
+      "climate": "W",
+      "substrate": "Perlita",
+      "location": "Cámara tropical",
+      "substrate_details": "Perlita pura con alta retención de humedad",
+      "notes": "Condiciones tropicales para especies de clima caliente"
+    }
+  }
+]

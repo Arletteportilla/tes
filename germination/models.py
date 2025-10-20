@@ -93,13 +93,14 @@ class SeedSource(BaseModel):
 class GerminationCondition(BaseModel):
     """
     Model representing the environmental conditions during germination.
-    Tracks climate, substrate, and location conditions.
+    Simplified climate tracking with predefined temperature ranges.
     """
     CLIMATE_CHOICES = [
-        ('Controlado', 'Ambiente controlado'),
-        ('Invernadero', 'Invernadero'),
-        ('Exterior', 'Exterior'),
-        ('Laboratorio', 'Laboratorio'),
+        ('I', 'Intermedio'),
+        ('W', 'Caliente'),
+        ('C', 'Frío'),
+        ('IW', 'Intermedio Caliente'),
+        ('IC', 'Intermedio Frío'),
     ]
     
     SUBSTRATE_CHOICES = [
@@ -112,9 +113,9 @@ class GerminationCondition(BaseModel):
     ]
     
     climate = models.CharField(
-        max_length=50,
+        max_length=2,
         choices=CLIMATE_CHOICES,
-        help_text="Tipo de ambiente climático"
+        help_text="Tipo de clima durante la germinación"
     )
     substrate = models.CharField(
         max_length=50,
@@ -124,27 +125,6 @@ class GerminationCondition(BaseModel):
     location = models.CharField(
         max_length=200,
         help_text="Ubicación específica (vivero, mesa, etc.)"
-    )
-    
-    # Environmental parameters
-    temperature = models.DecimalField(
-        max_digits=4,
-        decimal_places=1,
-        null=True,
-        blank=True,
-        help_text="Temperatura promedio en grados Celsius"
-    )
-    humidity = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0)],
-        help_text="Humedad relativa en porcentaje (0-100)"
-    )
-    light_hours = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0)],
-        help_text="Horas de luz diarias"
     )
     
     # Additional details
@@ -163,20 +143,31 @@ class GerminationCondition(BaseModel):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.climate} - {self.substrate} - {self.location}"
+        return f"{self.get_climate_display()} - {self.substrate} - {self.location}"
 
-    def clean(self):
-        """Custom validation for GerminationCondition model."""
-        super().clean()
-        
-        if self.humidity is not None and (self.humidity < 0 or self.humidity > 100):
-            raise ValidationError({'humidity': 'La humedad debe estar entre 0 y 100%'})
-        
-        if self.light_hours is not None and self.light_hours > 24:
-            raise ValidationError({'light_hours': 'Las horas de luz no pueden exceder 24 horas'})
-        
-        if self.temperature is not None and self.temperature < -50:
-            raise ValidationError({'temperature': 'La temperatura no puede ser menor a -50°C'})
+    @property
+    def temperature_range(self):
+        """Get the temperature range for the climate type."""
+        ranges = {
+            'C': '10-18°C',
+            'IC': '18-22°C', 
+            'I': '22-26°C',
+            'IW': '26-30°C',
+            'W': '30-35°C'
+        }
+        return ranges.get(self.climate, 'No definido')
+
+    @property
+    def description(self):
+        """Get detailed description of the climate condition."""
+        descriptions = {
+            'C': 'Clima frío, ideal para especies de alta montaña',
+            'IC': 'Clima intermedio frío, condiciones templadas',
+            'I': 'Clima intermedio, condiciones estándar',
+            'IW': 'Clima intermedio caliente, condiciones cálidas',
+            'W': 'Clima caliente, ideal para especies tropicales'
+        }
+        return descriptions.get(self.climate, 'Sin descripción')
 
 
 class GerminationRecord(BaseModel):
@@ -316,7 +307,9 @@ class GerminationRecord(BaseModel):
 
     def germination_rate(self):
         """Calculate germination success rate as percentage."""
-        if self.seeds_planted == 0:
+        if not self.seeds_planted or self.seeds_planted == 0:
+            return 0
+        if not self.seedlings_germinated:
             return 0
         return round((self.seedlings_germinated / self.seeds_planted) * 100, 2)
 

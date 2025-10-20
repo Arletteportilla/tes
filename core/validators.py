@@ -552,30 +552,28 @@ class PollinationValidators:
                 code='missing_climate_condition'
             )
         
-        # Check temperature ranges
-        if climate_condition.temperature is not None:
-            if climate_condition.temperature < 15 or climate_condition.temperature > 35:
-                raise ValidationError(
-                    _(f"La temperatura ({climate_condition.temperature}°C) está fuera del "
-                      f"rango óptimo para polinización (15-35°C)"),
-                    code='suboptimal_temperature'
-                )
-        
-        # Check humidity
-        if climate_condition.humidity is not None:
-            if climate_condition.humidity < 40 or climate_condition.humidity > 80:
-                raise ValidationError(
-                    _(f"La humedad ({climate_condition.humidity}%) está fuera del "
-                      f"rango óptimo para polinización (40-80%)"),
-                    code='suboptimal_humidity'
-                )
-        
-        # Weather-specific validations
-        if climate_condition.weather == 'Lluvioso':
+        # Validate climate type is appropriate
+        valid_climates = ['I', 'W', 'C', 'IW', 'IC']
+        if climate_condition.climate not in valid_climates:
             raise ValidationError(
-                _("No se recomienda realizar polinización en condiciones lluviosas"),
-                code='unsuitable_weather'
+                _(f"El tipo de clima '{climate_condition.climate}' no es válido"),
+                code='invalid_climate_type'
             )
+        
+        # Provide recommendations based on climate type
+        climate_recommendations = {
+            'C': 'Clima frío - Ideal para especies de montaña y algunas orquídeas',
+            'IC': 'Clima intermedio frío - Bueno para la mayoría de especies templadas',
+            'I': 'Clima intermedio - Condiciones estándar para la mayoría de especies',
+            'IW': 'Clima intermedio caliente - Ideal para especies subtropicales',
+            'W': 'Clima caliente - Perfecto para especies tropicales'
+        }
+        
+        # Log recommendation for the selected climate
+        import logging
+        logger = logging.getLogger('core.validators')
+        logger.info(f"Clima seleccionado: {climate_condition.get_climate_display()} - "
+                   f"{climate_recommendations.get(climate_condition.climate, 'Sin recomendación')}")
 
 
 class GerminationValidators:
@@ -690,42 +688,39 @@ class GerminationValidators:
                 code='missing_germination_condition'
             )
         
-        # Temperature validation
-        if germination_condition.temperature is not None:
-            genus_temp_ranges = {
-                'Orchidaceae': (18, 28),
-                'Cattleya': (20, 26),
-                'Dendrobium': (18, 25),
-                'Phalaenopsis': (22, 28),
-            }
-            
-            temp_range = genus_temp_ranges.get(plant.genus, (15, 30))
-            min_temp, max_temp = temp_range
-            
-            if germination_condition.temperature < min_temp or germination_condition.temperature > max_temp:
-                raise ValidationError(
-                    _(f"La temperatura ({germination_condition.temperature}°C) está fuera del "
-                      f"rango óptimo para {plant.genus} ({min_temp}-{max_temp}°C)"),
-                    code='suboptimal_germination_temperature'
-                )
+        # Validate climate type is appropriate
+        valid_climates = ['I', 'W', 'C', 'IW', 'IC']
+        if germination_condition.climate not in valid_climates:
+            raise ValidationError(
+                _(f"El tipo de clima '{germination_condition.climate}' no es válido"),
+                code='invalid_climate_type'
+            )
         
-        # Humidity validation
-        if germination_condition.humidity is not None:
-            if germination_condition.humidity < 60 or germination_condition.humidity > 90:
-                raise ValidationError(
-                    _(f"La humedad ({germination_condition.humidity}%) está fuera del "
-                      f"rango óptimo para germinación (60-90%)"),
-                    code='suboptimal_germination_humidity'
-                )
+        # Validate climate compatibility with plant genus
+        genus_climate_recommendations = {
+            'Orchidaceae': ['I', 'IW', 'IC'],  # Prefer intermediate climates
+            'Cattleya': ['I', 'IW'],           # Prefer intermediate to warm
+            'Dendrobium': ['I', 'IC'],         # Prefer intermediate to cool
+            'Phalaenopsis': ['IW', 'W'],       # Prefer warm climates
+            'Cactaceae': ['W', 'IW'],          # Prefer warm climates
+            'Bromeliaceae': ['IW', 'W', 'I'],  # Flexible, prefer warm
+        }
         
-        # Light hours validation
-        if germination_condition.light_hours is not None:
-            if germination_condition.light_hours < 8 or germination_condition.light_hours > 16:
-                raise ValidationError(
-                    _(f"Las horas de luz ({germination_condition.light_hours}h) están fuera del "
-                      f"rango óptimo para germinación (8-16h)"),
-                    code='suboptimal_light_hours'
-                )
+        recommended_climates = genus_climate_recommendations.get(plant.genus, ['I', 'IW', 'IC'])
+        
+        if germination_condition.climate not in recommended_climates:
+            climate_names = [dict(germination_condition.CLIMATE_CHOICES)[c] for c in recommended_climates]
+            raise ValidationError(
+                _(f"El clima '{germination_condition.get_climate_display()}' no es óptimo para {plant.genus}. "
+                  f"Se recomienda: {', '.join(climate_names)}"),
+                code='suboptimal_climate_for_genus'
+            )
+        
+        # Log successful validation
+        import logging
+        logger = logging.getLogger('core.validators')
+        logger.info(f"Condiciones de germinación validadas: {germination_condition.get_climate_display()} "
+                   f"para {plant.genus} {plant.species}")
     
     @staticmethod
     def validate_transplant_timing(germination_record, transplant_date=None):

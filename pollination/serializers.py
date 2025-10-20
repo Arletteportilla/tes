@@ -68,29 +68,17 @@ class PollinationTypeSerializer(serializers.ModelSerializer):
 class ClimateConditionSerializer(serializers.ModelSerializer):
     """Serializer for ClimateCondition model."""
     
+    climate_display = serializers.CharField(source='get_climate_display', read_only=True)
+    temperature_range = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    
     class Meta:
         model = ClimateCondition
         fields = [
-            'id', 'weather', 'temperature', 'humidity',
-            'wind_speed', 'notes', 'created_at', 'updated_at'
+            'id', 'climate', 'climate_display', 'temperature_range', 
+            'description', 'notes', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['created_at', 'updated_at']
-    
-    def validate_humidity(self, value):
-        """Validate humidity is within valid range."""
-        if value is not None and (value < 0 or value > 100):
-            raise serializers.ValidationError(
-                "La humedad debe estar entre 0 y 100%."
-            )
-        return value
-    
-    def validate_wind_speed(self, value):
-        """Validate wind speed is not negative."""
-        if value is not None and value < 0:
-            raise serializers.ValidationError(
-                "La velocidad del viento no puede ser negativa."
-            )
-        return value
+        read_only_fields = ['created_at', 'updated_at', 'climate_display', 'temperature_range', 'description']
 
 
 class PollinationRecordSerializer(serializers.ModelSerializer):

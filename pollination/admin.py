@@ -54,15 +54,15 @@ class PollinationTypeAdmin(admin.ModelAdmin):
 @admin.register(ClimateCondition)
 class ClimateConditionAdmin(admin.ModelAdmin):
     """Admin configuration for ClimateCondition model."""
-    list_display = ['weather', 'temperature', 'humidity', 'wind_speed', 'created_at']
-    list_filter = ['weather', 'created_at']
-    search_fields = ['weather', 'notes']
+    list_display = ['climate', 'get_climate_display', 'temperature_range', 'created_at']
+    list_filter = ['climate', 'created_at']
+    search_fields = ['notes']
     ordering = ['-created_at']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'temperature_range', 'description']
     
     fieldsets = (
         ('Condiciones Climáticas', {
-            'fields': ('weather', 'temperature', 'humidity', 'wind_speed')
+            'fields': ('climate', 'temperature_range', 'description')
         }),
         ('Observaciones', {
             'fields': ('notes',)
@@ -72,6 +72,11 @@ class ClimateConditionAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    def temperature_range(self, obj):
+        """Display temperature range in admin."""
+        return obj.temperature_range
+    temperature_range.short_description = "Rango de Temperatura"
 
 
 @admin.register(PollinationRecord)

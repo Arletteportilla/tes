@@ -1,0 +1,42 @@
+[
+  {
+    "model": "pollination.climatecondition",
+    "pk": 1,
+    "fields": {
+      "climate": "C",
+      "notes": "Condición climática fría predefinida para especies de montaña"
+    }
+  },
+  {
+    "model": "pollination.climatecondition",
+    "pk": 2,
+    "fields": {
+      "climate": "IC",
+      "notes": "Condición climática intermedia fría para especies templadas"
+    }
+  },
+  {
+    "model": "pollination.climatecondition",
+    "pk": 3,
+    "fields": {
+      "climate": "I",
+      "notes": "Condición climática intermedia estándar para la mayoría de especies"
+    }
+  },
+  {
+    "model": "pollination.climatecondition",
+    "pk": 4,
+    "fields": {
+      "climate": "IW",
+      "notes": "Condición climática intermedia caliente para especies subtropicales"
+    }
+  },
+  {
+    "model": "pollination.climatecondition",
+    "pk": 5,
+    "fields": {
+      "climate": "W",
+      "notes": "Condición climática caliente para especies tropicales"
+    }
+  }
+]

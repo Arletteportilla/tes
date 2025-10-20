@@ -376,26 +376,12 @@ class GerminationValidationService:
         errors = []
         
         try:
-            # Validate environmental parameters using custom validators
-            temperature = data.get('temperature')
-            humidity = data.get('humidity')
-            light_hours = data.get('light_hours')
+            # Validate climate type
+            climate = data.get('climate')
+            valid_climates = ['I', 'W', 'C', 'IW', 'IC']
             
-            if temperature is not None:
-                try:
-                    NumericValidators.validate_temperature(temperature)
-                except ValidationError as e:
-                    errors.append(str(e.message))
-            
-            if humidity is not None:
-                try:
-                    NumericValidators.validate_percentage(humidity, "humedad")
-                except ValidationError as e:
-                    errors.append(str(e.message))
-            
-            if light_hours is not None:
-                if light_hours < 0 or light_hours > 24:
-                    errors.append('Las horas de luz deben estar entre 0 y 24 horas')
+            if climate and climate not in valid_climates:
+                errors.append(f'Tipo de clima inválido. Opciones válidas: {", ".join(valid_climates)}')
             
             # Validate required fields using string validator
             required_fields = [

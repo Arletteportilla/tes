@@ -125,39 +125,20 @@ class PollinationType(BaseModel):
 class ClimateCondition(BaseModel):
     """
     Model representing climate conditions during pollination.
-    Tracks environmental factors that may affect pollination success.
+    Simplified climate tracking with predefined temperature ranges.
     """
-    WEATHER_CHOICES = [
-        ('Soleado', 'Soleado'),
-        ('Nublado', 'Nublado'),
-        ('Lluvioso', 'Lluvioso'),
-        ('Parcialmente nublado', 'Parcialmente nublado'),
+    CLIMATE_CHOICES = [
+        ('I', 'Intermedio'),
+        ('W', 'Caliente'),
+        ('C', 'Frío'),
+        ('IW', 'Intermedio Caliente'),
+        ('IC', 'Intermedio Frío'),
     ]
     
-    weather = models.CharField(
-        max_length=50,
-        choices=WEATHER_CHOICES,
-        help_text="Condición climática durante la polinización"
-    )
-    temperature = models.DecimalField(
-        max_digits=4,
-        decimal_places=1,
-        null=True,
-        blank=True,
-        help_text="Temperatura en grados Celsius"
-    )
-    humidity = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0)],
-        help_text="Humedad relativa en porcentaje (0-100)"
-    )
-    wind_speed = models.DecimalField(
-        max_digits=4,
-        decimal_places=1,
-        null=True,
-        blank=True,
-        help_text="Velocidad del viento en km/h"
+    climate = models.CharField(
+        max_length=2,
+        choices=CLIMATE_CHOICES,
+        help_text="Tipo de clima durante la polinización"
     )
     notes = models.TextField(
         blank=True,
@@ -170,18 +151,31 @@ class ClimateCondition(BaseModel):
         ordering = ['-created_at']
 
     def __str__(self):
-        temp_str = f" - {self.temperature}°C" if self.temperature else ""
-        return f"{self.weather}{temp_str}"
+        return f"{self.get_climate_display()}"
 
-    def clean(self):
-        """Custom validation for ClimateCondition model."""
-        super().clean()
-        
-        if self.humidity is not None and (self.humidity < 0 or self.humidity > 100):
-            raise ValidationError({'humidity': 'La humedad debe estar entre 0 y 100%'})
-        
-        if self.wind_speed is not None and self.wind_speed < 0:
-            raise ValidationError({'wind_speed': 'La velocidad del viento no puede ser negativa'})
+    @property
+    def temperature_range(self):
+        """Get the temperature range for the climate type."""
+        ranges = {
+            'C': '10-18°C',
+            'IC': '18-22°C', 
+            'I': '22-26°C',
+            'IW': '26-30°C',
+            'W': '30-35°C'
+        }
+        return ranges.get(self.climate, 'No definido')
+
+    @property
+    def description(self):
+        """Get detailed description of the climate condition."""
+        descriptions = {
+            'C': 'Clima frío, ideal para especies de alta montaña',
+            'IC': 'Clima intermedio frío, condiciones templadas',
+            'I': 'Clima intermedio, condiciones estándar',
+            'IW': 'Clima intermedio caliente, condiciones cálidas',
+            'W': 'Clima caliente, ideal para especies tropicales'
+        }
+        return descriptions.get(self.climate, 'Sin descripción')
 
 
 class PollinationRecord(BaseModel):

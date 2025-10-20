@@ -44,20 +44,20 @@ class SeedSourceAdmin(admin.ModelAdmin):
 class GerminationConditionAdmin(admin.ModelAdmin):
     """Admin configuration for GerminationCondition model."""
     list_display = [
-        'climate', 'substrate', 'location', 'temperature', 
-        'humidity', 'light_hours', 'created_at'
+        'climate', 'get_climate_display', 'substrate', 'location', 
+        'temperature_range', 'created_at'
     ]
     list_filter = ['climate', 'substrate', 'created_at']
     search_fields = ['location', 'substrate_details', 'notes']
     ordering = ['-created_at']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'temperature_range', 'description']
     
     fieldsets = (
         ('Condiciones Básicas', {
-            'fields': ('climate', 'substrate', 'location')
+            'fields': ('climate', 'temperature_range', 'description')
         }),
-        ('Parámetros Ambientales', {
-            'fields': ('temperature', 'humidity', 'light_hours')
+        ('Sustrato y Ubicación', {
+            'fields': ('substrate', 'location')
         }),
         ('Detalles Adicionales', {
             'fields': ('substrate_details', 'notes')
@@ -67,6 +67,11 @@ class GerminationConditionAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    def temperature_range(self, obj):
+        """Display temperature range in admin."""
+        return obj.temperature_range
+    temperature_range.short_description = "Rango de Temperatura"
 
 
 @admin.register(GerminationRecord)
@@ -132,33 +137,45 @@ class GerminationRecordAdmin(admin.ModelAdmin):
     
     def germination_rate(self, obj):
         """Display germination rate in admin."""
-        return f"{obj.germination_rate()}%"
+        try:
+            return f"{obj.germination_rate()}%"
+        except (TypeError, ZeroDivisionError, AttributeError):
+            return "N/A"
     germination_rate.short_description = "Tasa de Germinación"
     
     def transplant_status(self, obj):
         """Display transplant status in admin."""
-        status_map = {
-            'pending': '⏳ Pendiente',
-            'approaching': '⚠️ Próximo',
-            'overdue': '🔴 Vencido',
-            'confirmed': '✅ Confirmado',
-            'unknown': '❓ Desconocido'
-        }
-        return status_map.get(obj.transplant_status, obj.transplant_status)
+        try:
+            status_map = {
+                'pending': '⏳ Pendiente',
+                'approaching': '⚠️ Próximo',
+                'overdue': '🔴 Vencido',
+                'confirmed': '✅ Confirmado',
+                'unknown': '❓ Desconocido'
+            }
+            return status_map.get(obj.transplant_status, obj.transplant_status)
+        except (AttributeError, TypeError):
+            return "❓ Desconocido"
     transplant_status.short_description = "Estado de Trasplante"
     
     def days_to_transplant(self, obj):
         """Display days to transplant in admin."""
-        days = obj.days_to_transplant()
-        if days is None:
+        try:
+            days = obj.days_to_transplant()
+            if days is None:
+                return "N/A"
+            elif days < 0:
+                return f"{abs(days)} días vencido"
+            else:
+                return f"{days} días restantes"
+        except (AttributeError, TypeError):
             return "N/A"
-        elif days < 0:
-            return f"{abs(days)} días vencido"
-        else:
-            return f"{days} días restantes"
     days_to_transplant.short_description = "Días para Trasplante"
     
     def is_transplant_overdue(self, obj):
         """Display overdue status in admin."""
-        return "🔴 Sí" if obj.is_transplant_overdue() else "✅ No"
+        try:
+            return "🔴 Sí" if obj.is_transplant_overdue() else "✅ No"
+        except (AttributeError, TypeError):
+            return "❓ N/A"
     is_transplant_overdue.short_description = "¿Vencido?"

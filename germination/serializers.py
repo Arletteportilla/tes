@@ -19,25 +19,18 @@ class GerminationConditionSerializer(serializers.ModelSerializer):
     Handles environmental conditions during germination.
     """
     
+    climate_display = serializers.CharField(source='get_climate_display', read_only=True)
+    temperature_range = serializers.CharField(read_only=True)
+    description = serializers.CharField(read_only=True)
+    
     class Meta:
         model = GerminationCondition
         fields = [
-            'id', 'climate', 'substrate', 'location', 'temperature',
-            'humidity', 'light_hours', 'substrate_details', 'notes',
+            'id', 'climate', 'climate_display', 'substrate', 'location', 
+            'temperature_range', 'description', 'substrate_details', 'notes',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def validate(self, data):
-        """Custom validation using the validation service."""
-        is_valid, errors = GerminationValidationService.validate_germination_condition(data)
-        
-        if not is_valid:
-            raise serializers.ValidationError({
-                'non_field_errors': errors
-            })
-        
-        return data
+        read_only_fields = ['id', 'created_at', 'updated_at', 'climate_display', 'temperature_range', 'description']
 
 
 class SeedSourceSerializer(serializers.ModelSerializer):
@@ -325,10 +318,11 @@ class GerminationConditionListSerializer(serializers.ModelSerializer):
     """
     climate_display = serializers.CharField(source='get_climate_display', read_only=True)
     substrate_display = serializers.CharField(source='get_substrate_display', read_only=True)
+    temperature_range = serializers.CharField(read_only=True)
     
     class Meta:
         model = GerminationCondition
         fields = [
             'id', 'climate', 'climate_display', 'substrate', 'substrate_display',
-            'location', 'temperature', 'humidity'
+            'location', 'temperature_range'
         ]
