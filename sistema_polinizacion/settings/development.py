@@ -94,6 +94,9 @@ CELERY_TASK_ALWAYS_EAGER = config('CELERY_TASK_ALWAYS_EAGER', default=False, cas
 CELERY_TASK_EAGER_PROPAGATES = True
 
 # Development Logging Configuration
+# Control logging verbosity with environment variable
+DJANGO_LOG_LEVEL = config('DJANGO_LOG_LEVEL', default='INFO')
+
 LOGGING = BASE_LOGGING.copy()
 LOGGING.update({
     'handlers': {
@@ -134,7 +137,13 @@ LOGGING.update({
     'loggers': {
         'django': {
             'handlers': ['file', 'console'],
-            'level': 'DEBUG',
+            'level': DJANGO_LOG_LEVEL,  # Configurable via environment
+            'propagate': False,
+        },
+        # Specifically silence the auto-reloader
+        'django.utils.autoreload': {
+            'handlers': ['file'],  # Only log to file, not console
+            'level': 'WARNING',  # Only show warnings and errors
             'propagate': False,
         },
         'sistema_polinizacion': {

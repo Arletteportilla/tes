@@ -12,13 +12,13 @@ from django.db.models import Q, Count, Avg
 from datetime import date, timedelta
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample, OpenApiParameter
 
-from .models import GerminationRecord, SeedSource, GerminationCondition
+from .models import GerminationRecord, SeedSource, GerminationSetup
 from .serializers import (
     GerminationRecordSerializer, GerminationRecordCreateSerializer,
     GerminationRecordUpdateSerializer, SeedSourceSerializer,
-    GerminationConditionSerializer, GerminationStatisticsSerializer,
+    GerminationSetupSerializer, GerminationStatisticsSerializer,
     TransplantRecommendationSerializer, SeedSourceListSerializer,
-    GerminationConditionListSerializer
+    GerminationSetupListSerializer
 )
 from .services import GerminationService, GerminationValidationService
 from authentication.permissions import RoleBasedPermission
@@ -455,13 +455,13 @@ class SeedSourceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class GerminationConditionViewSet(viewsets.ModelViewSet):
+class GerminationSetupViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for managing germination conditions.
-    Provides CRUD operations for environmental conditions.
+    ViewSet for managing germination setups.
+    Provides CRUD operations for germination configurations.
     """
-    queryset = GerminationCondition.objects.all()
-    serializer_class = GerminationConditionSerializer
+    queryset = GerminationSetup.objects.all()
+    serializer_class = GerminationSetupSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['climate', 'substrate']
@@ -472,8 +472,8 @@ class GerminationConditionViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
         if self.action == 'list':
-            return GerminationConditionListSerializer
-        return GerminationConditionSerializer
+            return GerminationSetupListSerializer
+        return GerminationSetupSerializer
     
     @action(detail=False, methods=['get'])
     def by_climate(self, request):

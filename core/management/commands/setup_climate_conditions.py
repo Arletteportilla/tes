@@ -5,8 +5,8 @@ Creates the basic climate conditions for both pollination and germination.
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from pollination.models import ClimateCondition as PollinationClimate
-from germination.models import GerminationCondition
+from core.models import ClimateCondition
+from germination.models import GerminationSetup
 
 
 class Command(BaseCommand):
@@ -27,25 +27,25 @@ class Command(BaseCommand):
         with transaction.atomic():
             if options['reset']:
                 self.stdout.write('Deleting existing climate conditions...')
-                PollinationClimate.objects.all().delete()
-                GerminationCondition.objects.all().delete()
+                ClimateCondition.objects.all().delete()
+                GerminationSetup.objects.all().delete()
 
-            # Create pollination climate conditions
-            self.create_pollination_climates()
+            # Create shared climate conditions
+            self.create_climate_conditions()
             
-            # Create germination conditions
-            self.create_germination_conditions()
+            # Create germination setups
+            self.create_germination_setups()
 
         self.stdout.write(
             self.style.SUCCESS('Successfully set up climate conditions!')
         )
 
-    def create_pollination_climates(self):
-        """Create predefined pollination climate conditions."""
+    def create_climate_conditions(self):
+        """Create shared climate conditions."""
         climates = [
             {
                 'climate': 'C',
-                'notes': 'Condición climática fría predefinida para especies de montaña'
+                'notes': 'Condición climática fría para especies de montaña'
             },
             {
                 'climate': 'IC',
@@ -66,66 +66,54 @@ class Command(BaseCommand):
         ]
 
         for climate_data in climates:
-            climate, created = PollinationClimate.objects.get_or_create(
+            climate, created = ClimateCondition.objects.get_or_create(
                 climate=climate_data['climate'],
                 defaults={'notes': climate_data['notes']}
             )
             if created:
-                self.stdout.write(f'  Created pollination climate: {climate.get_climate_display()}')
+                self.stdout.write(f'  Created climate condition: {climate.get_climate_display()}')
             else:
-                self.stdout.write(f'  Pollination climate already exists: {climate.get_climate_display()}')
+                self.stdout.write(f'  Climate condition already exists: {climate.get_climate_display()}')
 
-    def create_germination_conditions(self):
-        """Create predefined germination conditions."""
-        conditions = [
+    def create_germination_setups(self):
+        """Create predefined germination setups."""
+        # First ensure we have climate conditions
+        climate_conditions = {}
+        for climate_code in ['C', 'IC', 'I', 'IW', 'W']:
+            climate_conditions[climate_code] = ClimateCondition.objects.get(climate=climate_code)
+        
+        setups = [
             {
-                'climate': 'C',
-                'substrate': 'Turba',
-                'location': 'Cámara fría controlada',
-                'substrate_details': 'Turba pura con drenaje excelente',
-                'notes': 'Condiciones frías para especies de alta montaña'
+                'climate_code': 'C',
+                'setup_notes': 'Configuración climática fría para especies de alta montaña'
             },
             {
-                'climate': 'IC',
-                'substrate': 'Musgo sphagnum',
-                'location': 'Invernadero templado',
-                'substrate_details': 'Musgo sphagnum húmedo con perlita',
-                'notes': 'Condiciones templadas para especies intermedias'
+                'climate_code': 'IC',
+                'setup_notes': 'Configuración climática intermedia fría para especies templadas'
             },
             {
-                'climate': 'I',
-                'substrate': 'Corteza de pino',
-                'location': 'Invernadero estándar',
-                'substrate_details': 'Corteza de pino fina con vermiculita',
-                'notes': 'Condiciones estándar para la mayoría de especies'
+                'climate_code': 'I',
+                'setup_notes': 'Configuración climática intermedia estándar para la mayoría de especies'
             },
             {
-                'climate': 'IW',
-                'substrate': 'Mezcla personalizada',
-                'location': 'Invernadero cálido',
-                'substrate_details': 'Mezcla de turba, perlita y corteza',
-                'notes': 'Condiciones cálidas para especies subtropicales'
+                'climate_code': 'IW',
+                'setup_notes': 'Configuración climática intermedia caliente para especies subtropicales'
             },
             {
-                'climate': 'W',
-                'substrate': 'Perlita',
-                'location': 'Cámara tropical',
-                'substrate_details': 'Perlita pura con alta retención de humedad',
-                'notes': 'Condiciones tropicales para especies de clima caliente'
+                'climate_code': 'W',
+                'setup_notes': 'Configuración climática caliente para especies tropicales'
             }
         ]
 
-        for condition_data in conditions:
-            condition, created = GerminationCondition.objects.get_or_create(
-                climate=condition_data['climate'],
-                substrate=condition_data['substrate'],
-                location=condition_data['location'],
+        for setup_data in setups:
+            climate_condition = climate_conditions[setup_data['climate_code']]
+            setup, created = GerminationSetup.objects.get_or_create(
+                climate_condition=climate_condition,
                 defaults={
-                    'substrate_details': condition_data['substrate_details'],
-                    'notes': condition_data['notes']
+                    'setup_notes': setup_data['setup_notes']
                 }
             )
             if created:
-                self.stdout.write(f'  Created germination condition: {condition.get_climate_display()} - {condition.substrate}')
+                self.stdout.write(f'  Created germination setup: {setup.climate_display}')
             else:
-                self.stdout.write(f'  Germination condition already exists: {condition.get_climate_display()} - {condition.substrate}')
+                self.stdout.write(f'  Germination setup already exists: {setup.climate_display}')

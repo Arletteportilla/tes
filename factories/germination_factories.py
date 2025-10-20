@@ -1,6 +1,7 @@
 import factory
 from datetime import date, timedelta
-from germination.models import SeedSource, GerminationCondition, GerminationRecord
+from germination.models import SeedSource, GerminationSetup, GerminationRecord
+from core.models import ClimateCondition
 from .authentication_factories import CustomUserFactory
 from .pollination_factories import PlantFactory, PollinationRecordFactory
 
@@ -49,20 +50,17 @@ class ExternalSeedSourceFactory(SeedSourceFactory):
     external_supplier = factory.Faker('company')
 
 
-class GerminationConditionFactory(factory.django.DjangoModelFactory):
-    """Factory for GerminationCondition model."""
+class GerminationSetupFactory(factory.django.DjangoModelFactory):
+    """Factory for GerminationSetup model."""
     
     class Meta:
-        model = GerminationCondition
+        model = GerminationSetup
     
-    climate = factory.Iterator(['Controlado', 'Invernadero', 'Exterior', 'Laboratorio'])
-    substrate = factory.Iterator(['Turba', 'Perlita', 'Vermiculita', 'Corteza de pino', 'Musgo sphagnum', 'Mezcla personalizada'])
-    location = factory.Faker('address')
-    temperature = factory.Faker('pydecimal', left_digits=2, right_digits=1, min_value=18, max_value=28)
-    humidity = factory.Faker('pyint', min_value=60, max_value=85)
-    light_hours = factory.Faker('pyint', min_value=8, max_value=16)
-    substrate_details = factory.Faker('text', max_nb_chars=150)
-    notes = factory.Faker('text', max_nb_chars=100)
+    climate_condition = factory.LazyFunction(
+        lambda: ClimateCondition.objects.filter(climate__in=['C', 'IC', 'I', 'IW', 'W']).first() or 
+                ClimateCondition.objects.create(climate='I', notes='Test climate condition')
+    )
+    setup_notes = factory.Faker('text', max_nb_chars=200)
 
 
 class GerminationRecordFactory(factory.django.DjangoModelFactory):
@@ -75,7 +73,7 @@ class GerminationRecordFactory(factory.django.DjangoModelFactory):
     germination_date = factory.LazyFunction(lambda: date.today() - timedelta(days=15))
     plant = factory.SubFactory(PlantFactory)
     seed_source = factory.SubFactory(SeedSourceFactory)
-    germination_condition = factory.SubFactory(GerminationConditionFactory)
+    germination_setup = factory.SubFactory(GerminationSetupFactory)
     seeds_planted = factory.Faker('pyint', min_value=10, max_value=100)
     transplant_days = 90
     is_successful = None

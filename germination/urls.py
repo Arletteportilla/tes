@@ -13,7 +13,7 @@ app_name = 'germination'
 router = DefaultRouter()
 router.register(r'records', views.GerminationRecordViewSet, basename='germinationrecord')
 router.register(r'seed-sources', views.SeedSourceViewSet, basename='seedsource')
-router.register(r'conditions', views.GerminationConditionViewSet, basename='germinationcondition')
+router.register(r'setups', views.GerminationSetupViewSet, basename='germinationsetup')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -1,10 +1,22 @@
-# Actualización del Sistema de Clima
+# Sistema de Clima Unificado
 
 ## Resumen de Cambios
 
-Se ha simplificado el sistema de condiciones climáticas para polinización y germinación, reemplazando múltiples parámetros ambientales por un sistema de códigos de clima predefinidos.
+Se ha unificado el sistema de condiciones climáticas para polinización y germinación, creando un modelo compartido que simplifica la gestión del clima y garantiza consistencia entre ambos módulos.
 
-## Nuevos Códigos de Clima
+## Arquitectura del Nuevo Sistema
+
+### Modelo Compartido: ClimateCondition (core.models)
+- **Ubicación**: `core/models.py`
+- **Propósito**: Modelo base compartido entre polinización y germinación
+- **Campos**: `climate`, `notes`, timestamps
+
+### Modelo Específico: GerminationSetup (germination.models)
+- **Ubicación**: `germination/models.py`
+- **Propósito**: Configuración específica de germinación que referencia ClimateCondition
+- **Campos**: `climate_condition` (FK), `substrate`, `location`, `substrate_details`, `setup_notes`
+
+## Códigos de Clima Disponibles
 
 | Código | Nombre | Rango de Temperatura | Descripción |
 |--------|--------|---------------------|-------------|
@@ -16,30 +28,19 @@ Se ha simplificado el sistema de condiciones climáticas para polinización y ge
 
 ## Cambios en los Modelos
 
-### ClimateCondition (Polinización)
+### ClimateCondition (Compartido - core.models)
 
-**Antes:**
-```python
-{
-    "weather": "Soleado",
-    "temperature": 25.0,
-    "humidity": 65,
-    "wind_speed": 5.2,
-    "notes": "Condiciones óptimas"
-}
-```
-
-**Después:**
+**Nuevo modelo unificado:**
 ```python
 {
     "climate": "I",
-    "notes": "Condiciones óptimas"
+    "notes": "Condiciones estándar"
 }
 ```
 
-### GerminationCondition (Germinación)
+### GerminationSetup (Germinación)
 
-**Antes:**
+**Antes (GerminationCondition):**
 ```python
 {
     "climate": "Controlado",
@@ -51,16 +52,54 @@ Se ha simplificado el sistema de condiciones climáticas para polinización y ge
 }
 ```
 
-**Después:**
+**Después (GerminationSetup):**
 ```python
 {
-    "climate": "I",
+    "climate_condition": 3,  // Referencia al ClimateCondition compartido
     "substrate": "Turba", 
-    "location": "Invernadero 1"
+    "location": "Invernadero 1",
+    "substrate_details": "Turba con perlita",
+    "setup_notes": "Configuración estándar"
+}
+```
+
+### PollinationRecord
+
+**Ahora usa:**
+```python
+{
+    "climate_condition": 3  // Referencia al ClimateCondition compartido
 }
 ```
 
 ## Nuevos Endpoints de API
+
+### Crear Condición Climática Compartida
+
+```http
+POST /api/core/climate-conditions/
+Content-Type: application/json
+
+{
+    "climate": "I",
+    "notes": "Condiciones estándar para la mayoría de especies"
+}
+```
+
+### Crear Configuración de Germinación
+
+```http
+POST /api/germination/setups/
+Content-Type: application/json
+
+{
+    "climate_condition": 3,
+    "substrate": "Corteza de pino",
+    "location": "Invernadero cálido",
+    "substrate_details": "Corteza fina con perlita",
+    "setup_notes": "Configuración para especies intermedias"
+}
+```
 
 ### Crear Registro de Polinización
 
@@ -74,10 +113,7 @@ Content-Type: application/json
     "mother_plant": 1,
     "father_plant": 2,
     "new_plant": 3,
-    "climate_condition": {
-        "climate": "I",
-        "notes": "Condiciones estándar"
-    },
+    "climate_condition": 3,
     "capsules_quantity": 5,
     "observations": "Polinización exitosa"
 }
@@ -93,11 +129,7 @@ Content-Type: application/json
     "germination_date": "2024-01-20",
     "plant": 1,
     "seed_source": 1,
-    "germination_condition": {
-        "climate": "IW",
-        "substrate": "Corteza de pino",
-        "location": "Invernadero cálido"
-    },
+    "germination_setup": 4,
     "seeds_planted": 50,
     "seedlings_germinated": 42
 }
@@ -120,29 +152,38 @@ Content-Type: application/json
 }
 ```
 
-### GerminationCondition Response
+### GerminationSetup Response
 
 ```json
 {
     "id": 1,
-    "climate": "IW",
+    "climate_condition": 4,
     "climate_display": "Intermedio Caliente",
     "substrate": "Corteza de pino",
     "location": "Invernadero cálido",
     "temperature_range": "26-30°C",
-    "description": "Clima intermedio caliente, condiciones cálidas",
+    "climate_description": "Clima intermedio caliente, condiciones cálidas",
     "substrate_details": "Corteza de pino fina con vermiculita",
-    "notes": "Ideal para especies subtropicales",
+    "setup_notes": "Ideal para especies subtropicales",
     "created_at": "2024-01-15T10:30:00Z",
     "updated_at": "2024-01-15T10:30:00Z"
 }
 ```
 
+## Ventajas del Sistema Unificado
+
+1. **Consistencia**: Un solo modelo de clima compartido entre polinización y germinación
+2. **Mantenimiento**: Cambios en condiciones climáticas se reflejan automáticamente en ambos módulos
+3. **Simplicidad**: Eliminación de duplicación de código y datos
+4. **Escalabilidad**: Fácil agregar nuevos tipos de clima que beneficien ambos procesos
+5. **Integridad**: Referencias consistentes y validación centralizada
+6. **Flexibilidad**: GerminationSetup permite configuraciones específicas manteniendo clima compartido
+
 ## Validaciones Automáticas
 
 ### Compatibilidad Clima-Especie
 
-El sistema ahora valida automáticamente la compatibilidad entre el tipo de clima y el género de la planta:
+El sistema valida automáticamente la compatibilidad entre el tipo de clima y el género de la planta:
 
 - **Orchidaceae**: Prefiere I, IW, IC
 - **Cattleya**: Prefiere I, IW  
@@ -157,6 +198,7 @@ El sistema ahora valida automáticamente la compatibilidad entre el tipo de clim
 
 ```bash
 # Aplicar migraciones de base de datos
+python manage.py migrate core
 python manage.py migrate pollination
 python manage.py migrate germination
 
@@ -164,46 +206,81 @@ python manage.py migrate germination
 python manage.py setup_climate_conditions
 ```
 
-### Migración Manual de Datos Existentes
+### Estructura de Migraciones
 
-Si tienes datos existentes, puedes mapear las condiciones antiguas a los nuevos códigos:
+1. **core.0001_initial**: Crea el modelo ClimateCondition compartido
+2. **pollination.0003_remove_climatecondition**: Actualiza referencias y elimina modelo local
+3. **germination.0003_update_to_shared_climate**: Crea GerminationSetup y actualiza referencias
 
-```python
-# Mapeo sugerido de temperatura a código de clima
-def map_temperature_to_climate(temperature):
-    if temperature < 18:
-        return 'C'
-    elif temperature < 22:
-        return 'IC'
-    elif temperature < 26:
-        return 'I'
-    elif temperature < 30:
-        return 'IW'
-    else:
-        return 'W'
+## Comandos de Gestión
+
+```bash
+# Crear condiciones climáticas y configuraciones predefinidas
+python manage.py setup_climate_conditions
+
+# Resetear y recrear todas las condiciones
+python manage.py setup_climate_conditions --reset
+
+# Verificar estado de migraciones
+python manage.py showmigrations core pollination germination
+
+# Ejecutar script de ejemplos
+python scripts/climate_examples.py
 ```
 
-## Beneficios del Nuevo Sistema
+## Cambios en el Admin
 
-1. **Simplicidad**: Un solo parámetro en lugar de múltiples campos
-2. **Consistencia**: Rangos de temperatura predefinidos y estandarizados
-3. **Validación**: Compatibilidad automática clima-especie
-4. **Usabilidad**: Interfaz más simple para los usuarios
-5. **Mantenimiento**: Menos campos que validar y mantener
+### ClimateCondition Admin (core/admin.py)
+- Gestión centralizada de condiciones climáticas
+- Campos de solo lectura para propiedades calculadas
+- Filtros por tipo de clima
+
+### GerminationSetup Admin (germination/admin.py)
+- Reemplaza GerminationCondition Admin
+- Referencia a ClimateCondition compartido
+- Campos específicos de configuración de germinación
+
+## Cambios en Serializadores
+
+### Nuevos Serializadores
+- `GerminationSetupSerializer`: Reemplaza `GerminationConditionSerializer`
+- `GerminationSetupListSerializer`: Para listados simplificados
+- Ambos módulos ahora importan `ClimateCondition` desde `core.models`
+
+## Fixtures Actualizados
+
+### climate_conditions.json
+- Ahora usa `core.climatecondition` en lugar de `pollination.climatecondition`
+
+### germination_conditions.json
+- Actualizado para usar `germination.germinationsetup`
+- Referencias a `climate_condition` en lugar de campos de clima directos
 
 ## Retrocompatibilidad
 
-⚠️ **Importante**: Esta actualización no es retrocompatible. Los datos existentes necesitarán ser migrados manualmente o se perderán durante la migración.
+⚠️ **Importante**: Esta actualización requiere migración de datos existentes. Las migraciones automáticas manejan la transición, pero se recomienda hacer backup antes de aplicarlas.
 
-## Comandos Útiles
+## Verificación del Sistema
+
+Después de aplicar las migraciones, verifica que todo funciona correctamente:
 
 ```bash
-# Crear condiciones climáticas predefinidas
-python manage.py setup_climate_conditions
+# Ejecutar tests
+python manage.py test core.tests
+python manage.py test pollination.tests  
+python manage.py test germination.tests
 
-# Resetear y recrear condiciones climáticas
-python manage.py setup_climate_conditions --reset
+# Verificar datos de ejemplo
+python scripts/climate_examples.py
 
-# Verificar migraciones
-python manage.py showmigrations pollination germination
+# Verificar admin
+python manage.py runserver
+# Navegar a /admin/ y verificar los modelos
 ```
+
+## Próximos Pasos
+
+1. Actualizar frontend para usar nuevos endpoints
+2. Actualizar documentación de API
+3. Crear tests adicionales para el sistema unificado
+4. Considerar agregar más tipos de clima según necesidades

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 class BaseModel(models.Model):
@@ -14,6 +15,62 @@ class BaseModel(models.Model):
 
     def __str__(self):
         return f"{self.__class__.__name__} - {self.pk}"
+
+
+class ClimateCondition(BaseModel):
+    """
+    Shared climate condition model for both pollination and germination.
+    Simplified climate tracking with predefined temperature ranges.
+    """
+    CLIMATE_CHOICES = [
+        ('I', 'Intermedio'),
+        ('W', 'Caliente'),
+        ('C', 'Frío'),
+        ('IW', 'Intermedio Caliente'),
+        ('IC', 'Intermedio Frío'),
+    ]
+    
+    climate = models.CharField(
+        max_length=2,
+        choices=CLIMATE_CHOICES,
+        help_text="Tipo de clima"
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Observaciones adicionales sobre las condiciones climáticas"
+    )
+
+    class Meta:
+        verbose_name = "Condición Climática"
+        verbose_name_plural = "Condiciones Climáticas"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.get_climate_display()}"
+
+    @property
+    def temperature_range(self):
+        """Get the temperature range for the climate type."""
+        ranges = {
+            'C': '10-18°C',
+            'IC': '18-22°C', 
+            'I': '22-26°C',
+            'IW': '26-30°C',
+            'W': '30-35°C'
+        }
+        return ranges.get(self.climate, 'No definido')
+
+    @property
+    def description(self):
+        """Get detailed description of the climate condition."""
+        descriptions = {
+            'C': 'Clima frío, ideal para especies de alta montaña',
+            'IC': 'Clima intermedio frío, condiciones templadas',
+            'I': 'Clima intermedio, condiciones estándar',
+            'IW': 'Clima intermedio caliente, condiciones cálidas',
+            'W': 'Clima caliente, ideal para especies tropicales'
+        }
+        return descriptions.get(self.climate, 'Sin descripción')
 
 
 class PermissionMixin:

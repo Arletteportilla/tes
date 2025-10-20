@@ -14,8 +14,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'sistema_polinizacion.settings')
 django.setup()
 
-from pollination.models import Plant, PollinationType, ClimateCondition, PollinationRecord
-from germination.models import SeedSource, GerminationCondition, GerminationRecord
+from pollination.models import Plant, PollinationType, PollinationRecord
+from core.models import ClimateCondition
+from germination.models import SeedSource, GerminationSetup, GerminationRecord
 from authentication.models import CustomUser, Role
 
 
@@ -129,24 +130,22 @@ def create_example_data():
         }
     )
     
-    # Create germination conditions for different climates
-    germination_conditions = []
+    # Create germination setups for different climates
+    germination_setups = []
     
-    for climate_code, substrate in [('IC', 'Turba'), ('I', 'Corteza de pino'), ('IW', 'Perlita')]:
-        condition, _ = GerminationCondition.objects.get_or_create(
-            climate=climate_code,
-            substrate=substrate,
-            location=f'Invernadero {climate_code}',
+    for climate_code in ['IC', 'I', 'IW']:
+        climate_condition = ClimateCondition.objects.get(climate=climate_code)
+        setup, _ = GerminationSetup.objects.get_or_create(
+            climate_condition=climate_condition,
             defaults={
-                'substrate_details': f'{substrate} con mezcla estándar',
-                'notes': f'Condiciones {climate_code} para germinación'
+                'setup_notes': f'Configuración climática {climate_code} para germinación de ejemplo'
             }
         )
-        germination_conditions.append(condition)
+        germination_setups.append(setup)
     
-    print(f"\n🌱 Condiciones de germinación creadas:")
-    for condition in germination_conditions:
-        print(f"   {condition.get_climate_display()} ({condition.temperature_range}) - {condition.substrate}")
+    print(f"\n🌱 Configuraciones de germinación creadas:")
+    for setup in germination_setups:
+        print(f"   {setup.climate_display} ({setup.temperature_range})")
     
     # Create germination record example
     germination_record, created = GerminationRecord.objects.get_or_create(
@@ -154,7 +153,7 @@ def create_example_data():
         germination_date=date.today(),
         plant=new_plant,
         seed_source=seed_source,
-        germination_condition=germination_conditions[1],  # Intermediate climate
+        germination_setup=germination_setups[1],  # Intermediate climate
         seeds_planted=50,
         seedlings_germinated=42,
         defaults={
@@ -165,8 +164,7 @@ def create_example_data():
     if created:
         print(f"\n✅ Registro de germinación creado:")
         print(f"   Planta: {germination_record.plant.full_scientific_name}")
-        print(f"   Clima: {germination_record.germination_condition.get_climate_display()}")
-        print(f"   Sustrato: {germination_record.germination_condition.substrate}")
+        print(f"   Clima: {germination_record.germination_setup.climate_display}")
         print(f"   Tasa de germinación: {germination_record.germination_rate()}%")
         print(f"   Trasplante estimado: {germination_record.estimated_transplant_date}")
 

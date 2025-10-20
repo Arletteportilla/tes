@@ -5,13 +5,13 @@ from factories import (
     RoleFactory, CustomUserFactory, UserProfileFactory,
     PlantFactory, OrchidPlantFactory, PollinationTypeFactory, ClimateConditionFactory,
     SelfPollinationRecordFactory, SiblingPollinationRecordFactory, HybridPollinationRecordFactory,
-    SeedSourceFactory, GerminationConditionFactory, GerminationRecordFactory,
+    SeedSourceFactory, GerminationSetupFactory, GerminationRecordFactory,
     AlertTypeFactory, PollinationAlertFactory, GerminationAlertFactory, UserAlertFactory,
     ReportTypeFactory, CompletedReportFactory, PollinationReportFactory
 )
 from authentication.models import Role, UserProfile
 from pollination.models import Plant, PollinationType, ClimateCondition, PollinationRecord
-from germination.models import SeedSource, GerminationCondition, GerminationRecord
+from germination.models import SeedSource, GerminationSetup, GerminationRecord
 from alerts.models import AlertType, Alert, UserAlert
 from reports.models import ReportType, Report
 
@@ -143,12 +143,12 @@ class TestGerminationFactories(TestCase):
         self.assertIn(source.source_type, ['Autopolinización', 'Sibling', 'Híbrido', 'Otra fuente'])
         self.assertTrue(source.is_active)
 
-    def test_germination_condition_factory(self):
-        """Test GerminationConditionFactory creates valid conditions."""
-        condition = GerminationConditionFactory()
-        self.assertIsInstance(condition, GerminationCondition)
-        self.assertIn(condition.climate, ['Controlado', 'Invernadero', 'Exterior', 'Laboratorio'])
-        self.assertIn(condition.substrate, ['Turba', 'Perlita', 'Vermiculita', 'Corteza de pino', 'Musgo sphagnum', 'Mezcla personalizada'])
+    def test_germination_setup_factory(self):
+        """Test GerminationSetupFactory creates valid setups."""
+        setup = GerminationSetupFactory()
+        self.assertIsInstance(setup, GerminationSetup)
+        self.assertIsNotNone(setup.climate_condition)
+        self.assertIn(setup.climate_condition.climate, ['C', 'IC', 'I', 'IW', 'W'])
 
     def test_germination_record_factory(self):
         """Test GerminationRecordFactory creates valid records."""
@@ -157,7 +157,7 @@ class TestGerminationFactories(TestCase):
         self.assertIsNotNone(record.responsible)
         self.assertIsNotNone(record.plant)
         self.assertIsNotNone(record.seed_source)
-        self.assertIsNotNone(record.germination_condition)
+        self.assertIsNotNone(record.germination_setup)
         self.assertGreater(record.seeds_planted, 0)
         self.assertLessEqual(record.seedlings_germinated, record.seeds_planted)
 

@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Q, Avg, Count, Sum
 from django.utils import timezone
 
-from .models import GerminationRecord, SeedSource, GerminationCondition
+from .models import GerminationRecord, SeedSource, GerminationSetup
 from pollination.models import Plant, PollinationRecord
 from core.validators import (
     DateValidators, DuplicateValidators, GerminationValidators,

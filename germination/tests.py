@@ -4,7 +4,8 @@ from django.db import IntegrityError
 from datetime import date, timedelta
 from authentication.models import CustomUser, Role
 from pollination.models import Plant, PollinationType, ClimateCondition, PollinationRecord
-from germination.models import SeedSource, GerminationCondition, GerminationRecord
+from germination.models import SeedSource, GerminationSetup, GerminationRecord
+from core.models import ClimateCondition
 
 
 class SeedSourceModelTest(TestCase):
@@ -114,77 +115,52 @@ class SeedSourceModelTest(TestCase):
             seed_source.clean()
 
 
-class GerminationConditionModelTest(TestCase):
-    """Test cases for GerminationCondition model."""
+class GerminationSetupModelTest(TestCase):
+    """Test cases for GerminationSetup model."""
     
-    def test_germination_condition_creation(self):
-        """Test germination condition creation."""
-        condition = GerminationCondition.objects.create(
-            climate='Invernadero',
-            substrate='Turba',
-            location='Vivero Principal - Mesa 3',
-            temperature=22.5,
-            humidity=75,
-            light_hours=12,
-            substrate_details='Turba rubia con perlita 70:30',
-            notes='Condiciones óptimas para germinación'
+    def test_germination_setup_creation(self):
+        """Test germination setup creation."""
+        climate_condition = ClimateCondition.objects.create(
+            climate='I',
+            notes='Condición climática intermedia'
         )
         
-        self.assertEqual(condition.climate, 'Invernadero')
-        self.assertEqual(condition.substrate, 'Turba')
-        self.assertEqual(condition.temperature, 22.5)
-        self.assertEqual(condition.humidity, 75)
-        self.assertEqual(condition.light_hours, 12)
-    
-    def test_germination_condition_str_representation(self):
-        """Test germination condition string representation."""
-        condition = GerminationCondition.objects.create(
-            climate='Controlado',
-            substrate='Perlita',
-            location='Lab 1'
-        )
-        expected = "Controlado - Perlita - Lab 1"
-        self.assertEqual(str(condition), expected)
-    
-    def test_germination_condition_humidity_validation(self):
-        """Test humidity validation."""
-        condition = GerminationCondition(
-            climate='Invernadero',
-            substrate='Turba',
-            location='Test',
-            humidity=150  # Invalid humidity
+        setup = GerminationSetup.objects.create(
+            climate_condition=climate_condition,
+            setup_notes='Configuración óptima para germinación'
         )
         
-        with self.assertRaises(ValidationError):
-            condition.clean()
-        
-        condition.humidity = -10
-        with self.assertRaises(ValidationError):
-            condition.clean()
+        self.assertEqual(setup.climate_condition.climate, 'I')
+        self.assertEqual(setup.climate_display, 'Intermedio')
+        self.assertIsNotNone(setup.temperature_range)
     
-    def test_germination_condition_light_hours_validation(self):
-        """Test light hours validation."""
-        condition = GerminationCondition(
-            climate='Invernadero',
-            substrate='Turba',
-            location='Test',
-            light_hours=25  # Invalid light hours
+    def test_germination_setup_str_representation(self):
+        """Test germination setup string representation."""
+        climate_condition = ClimateCondition.objects.create(
+            climate='I',
+            notes='Test climate'
+        )
+        setup = GerminationSetup.objects.create(
+            climate_condition=climate_condition,
+            setup_notes='Test setup'
+        )
+        expected = "Intermedio"
+        self.assertEqual(str(setup), expected)
+    
+    def test_germination_setup_properties(self):
+        """Test germination setup properties."""
+        climate_condition = ClimateCondition.objects.create(
+            climate='IW',
+            notes='Test warm climate'
+        )
+        setup = GerminationSetup.objects.create(
+            climate_condition=climate_condition,
+            setup_notes='Test setup'
         )
         
-        with self.assertRaises(ValidationError):
-            condition.clean()
-    
-    def test_germination_condition_temperature_validation(self):
-        """Test temperature validation."""
-        condition = GerminationCondition(
-            climate='Invernadero',
-            substrate='Turba',
-            location='Test',
-            temperature=-60  # Invalid temperature
-        )
-        
-        with self.assertRaises(ValidationError):
-            condition.clean()
+        self.assertEqual(setup.climate_display, 'Intermedio Caliente')
+        self.assertIsNotNone(setup.temperature_range)
+        self.assertIsNotNone(setup.climate_description)
 
 
 class GerminationRecordModelTest(TestCase):
@@ -217,11 +193,14 @@ class GerminationRecordModelTest(TestCase):
             external_supplier='Test Supplier'
         )
         
-        # Create germination condition
-        self.germination_condition = GerminationCondition.objects.create(
-            climate='Invernadero',
-            substrate='Turba',
-            location='Vivero Principal'
+        # Create germination setup
+        climate_condition = ClimateCondition.objects.create(
+            climate='I',
+            notes='Test climate condition'
+        )
+        self.germination_setup = GerminationSetup.objects.create(
+            climate_condition=climate_condition,
+            setup_notes='Test setup'
         )
     
     def test_germination_record_creation(self):
@@ -231,7 +210,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=100,
             seedlings_germinated=75,
             transplant_days=90
@@ -251,7 +230,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50
         )
         
@@ -266,7 +245,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=germination_date,
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50,
             transplant_days=90
         )
@@ -282,7 +261,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=future_date,
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50
         )
         
@@ -296,7 +275,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50,
             seedlings_germinated=75  # More than planted
         )
@@ -311,7 +290,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50,
             transplant_confirmed_date=date.today() - timedelta(days=1)  # Before germination
         )
@@ -327,7 +306,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=past_date,
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50,
             transplant_days=90
         )
@@ -341,7 +320,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50,
             transplant_days=90
         )
@@ -355,7 +334,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=100,
             seedlings_germinated=75
         )
@@ -369,7 +348,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today() - timedelta(days=100),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50
         )
         
@@ -388,7 +367,7 @@ class GerminationRecordModelTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=50,
             transplant_days=90
         )

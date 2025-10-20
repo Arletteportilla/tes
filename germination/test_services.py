@@ -8,7 +8,8 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 
-from .models import GerminationRecord, SeedSource, GerminationCondition
+from .models import GerminationRecord, SeedSource, GerminationSetup
+from core.models import ClimateCondition
 from .services import GerminationService, GerminationValidationService
 from pollination.models import Plant, PollinationType, PollinationRecord, ClimateCondition
 
@@ -40,10 +41,10 @@ class GerminationServiceTest(TestCase):
             external_supplier='Test Supplier'
         )
         
-        self.germination_condition = GerminationCondition.objects.create(
-            climate='Controlado',
-            substrate='Turba',
-            location='Test Location'
+        climate_condition = ClimateCondition.objects.create(climate='I', notes='Test climate')
+        self.germination_setup = GerminationSetup.objects.create(
+            climate_condition=climate_condition,
+            setup_notes='Test setup'
         )
     
     def test_calculate_transplant_date_default(self):
@@ -97,7 +98,7 @@ class GerminationServiceTest(TestCase):
             germination_date=date(2024, 1, 15),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10,
             transplant_confirmed=True,
             transplant_confirmed_date=date(2024, 4, 15)
@@ -120,7 +121,7 @@ class GerminationServiceTest(TestCase):
             estimated_transplant_date=past_date,
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -142,7 +143,7 @@ class GerminationServiceTest(TestCase):
             estimated_transplant_date=future_date,
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -175,7 +176,7 @@ class GerminationServiceTest(TestCase):
                 germination_date=date.today() - timedelta(days=i),
                 plant=self.plant,
                 seed_source=self.seed_source,
-                germination_condition=self.germination_condition,
+                germination_setup=self.germination_setup,
                 seeds_planted=10,
                 seedlings_germinated=8 if i < 2 else 6,  # 2 successful, 1 less successful
                 is_successful=True if i < 2 else False
@@ -202,7 +203,7 @@ class GerminationServiceTest(TestCase):
             estimated_transplant_date=today + timedelta(days=15),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -213,7 +214,7 @@ class GerminationServiceTest(TestCase):
             estimated_transplant_date=today + timedelta(days=10),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10,
             transplant_confirmed=True
         )
@@ -225,7 +226,7 @@ class GerminationServiceTest(TestCase):
             estimated_transplant_date=today + timedelta(days=60),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -245,7 +246,7 @@ class GerminationServiceTest(TestCase):
             estimated_transplant_date=today - timedelta(days=10),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -256,7 +257,7 @@ class GerminationServiceTest(TestCase):
             estimated_transplant_date=today + timedelta(days=30),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -481,10 +482,9 @@ class GerminationValidationServiceTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=GerminationCondition.objects.create(
-                climate='Controlado',
-                substrate='Turba',
-                location='Test Location'
+            germination_setup=GerminationSetup.objects.create(
+                climate_condition=ClimateCondition.objects.create(climate='I', notes='Test'),
+                setup_notes='Test setup'
             ),
             seeds_planted=10
         )
@@ -518,10 +518,9 @@ class GerminationValidationServiceTest(TestCase):
             germination_date=date.today(),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=GerminationCondition.objects.create(
-                climate='Controlado',
-                substrate='Turba',
-                location='Test Location'
+            germination_setup=GerminationSetup.objects.create(
+                climate_condition=ClimateCondition.objects.create(climate='I', notes='Test'),
+                setup_notes='Test setup'
             ),
             seeds_planted=10
         )

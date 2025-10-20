@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import SeedSource, GerminationCondition, GerminationRecord
+from .models import (
+    SeedSource, GerminationSetup, GerminationRecord
+)
+from core.models import ClimateCondition
 
 
 @admin.register(SeedSource)
@@ -40,33 +43,34 @@ class SeedSourceAdmin(admin.ModelAdmin):
         return super().get_queryset(request).select_related('pollination_record')
 
 
-@admin.register(GerminationCondition)
-class GerminationConditionAdmin(admin.ModelAdmin):
-    """Admin configuration for GerminationCondition model."""
+@admin.register(GerminationSetup)
+class GerminationSetupAdmin(admin.ModelAdmin):
+    """Admin configuration for GerminationSetup model."""
     list_display = [
-        'climate', 'get_climate_display', 'substrate', 'location', 
-        'temperature_range', 'created_at'
+        'climate_display', 'temperature_range', 'created_at'
     ]
-    list_filter = ['climate', 'substrate', 'created_at']
-    search_fields = ['location', 'substrate_details', 'notes']
+    list_filter = ['climate_condition__climate', 'created_at']
+    search_fields = ['setup_notes']
     ordering = ['-created_at']
-    readonly_fields = ['created_at', 'updated_at', 'temperature_range', 'description']
+    readonly_fields = ['created_at', 'updated_at', 'temperature_range', 'climate_description']
     
     fieldsets = (
-        ('Condiciones Básicas', {
-            'fields': ('climate', 'temperature_range', 'description')
-        }),
-        ('Sustrato y Ubicación', {
-            'fields': ('substrate', 'location')
+        ('Condición Climática', {
+            'fields': ('climate_condition', 'temperature_range', 'climate_description')
         }),
         ('Detalles Adicionales', {
-            'fields': ('substrate_details', 'notes')
+            'fields': ('setup_notes',)
         }),
         ('Auditoría', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
+    
+    def climate_display(self, obj):
+        """Display climate name in admin."""
+        return obj.climate_display
+    climate_display.short_description = "Clima"
     
     def temperature_range(self, obj):
         """Display temperature range in admin."""
@@ -102,7 +106,7 @@ class GerminationRecordAdmin(admin.ModelAdmin):
             'fields': ('responsible', 'germination_date', 'plant')
         }),
         ('Origen y Condiciones', {
-            'fields': ('seed_source', 'germination_condition')
+            'fields': ('seed_source', 'germination_setup')
         }),
         ('Cantidades', {
             'fields': ('seeds_planted', 'seedlings_germinated', 'transplant_days')
@@ -132,7 +136,7 @@ class GerminationRecordAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         """Optimize queryset with select_related."""
         return super().get_queryset(request).select_related(
-            'responsible', 'plant', 'seed_source', 'germination_condition'
+            'responsible', 'plant', 'seed_source', 'germination_setup'
         )
     
     def germination_rate(self, obj):

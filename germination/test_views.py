@@ -11,7 +11,8 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import GerminationRecord, SeedSource, GerminationCondition
+from .models import GerminationRecord, SeedSource, GerminationSetup
+from core.models import ClimateCondition
 from pollination.models import Plant, PollinationType, PollinationRecord, ClimateCondition
 from authentication.models import Role
 
@@ -67,10 +68,10 @@ class GerminationAPITestCase(TestCase):
             external_supplier='Test Supplier'
         )
         
-        self.germination_condition = GerminationCondition.objects.create(
-            climate='Controlado',
-            substrate='Turba',
-            location='Test Location'
+        climate_condition = ClimateCondition.objects.create(climate='I', notes='Test climate')
+        self.germination_setup = GerminationSetup.objects.create(
+            climate_condition=climate_condition,
+            setup_notes='Test setup'
         )
     
     def get_jwt_token(self, user):
@@ -139,7 +140,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=5),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10,
             seedlings_germinated=8
         )
@@ -159,7 +160,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=5),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10,
             seedlings_germinated=8
         )
@@ -182,7 +183,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=5),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10,
             seedlings_germinated=8
         )
@@ -210,7 +211,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=5),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -232,7 +233,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
                 germination_date=date.today() - timedelta(days=i+1),
                 plant=self.plant,
                 seed_source=self.seed_source,
-                germination_condition=self.germination_condition,
+                germination_setup=self.germination_setup,
                 seeds_planted=10,
                 seedlings_germinated=8 if i < 2 else 6,
                 is_successful=True if i < 2 else False
@@ -257,7 +258,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
             estimated_transplant_date=date.today() + timedelta(days=15),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -279,7 +280,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
             estimated_transplant_date=date.today() - timedelta(days=10),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -301,7 +302,7 @@ class GerminationRecordViewSetTest(GerminationAPITestCase):
             estimated_transplant_date=date.today() - timedelta(days=5),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -399,8 +400,8 @@ class SeedSourceViewSetTest(GerminationAPITestCase):
         self.assertEqual(len(response.data), 2)
 
 
-class GerminationConditionViewSetTest(GerminationAPITestCase):
-    """Test cases for GerminationConditionViewSet."""
+class GerminationSetupViewSetTest(GerminationAPITestCase):
+    """Test cases for GerminationSetupViewSet."""
     
     def test_create_germination_condition(self):
         """Test creating germination condition."""
@@ -415,7 +416,7 @@ class GerminationConditionViewSetTest(GerminationAPITestCase):
             'light_hours': 12
         }
         
-        url = reverse('germination:germinationcondition-list')
+        url = reverse('germination:germinationsetup-list')
         response = self.client.post(url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -425,7 +426,7 @@ class GerminationConditionViewSetTest(GerminationAPITestCase):
         """Test listing germination conditions."""
         self.authenticate_user(self.germinador_user)
         
-        url = reverse('germination:germinationcondition-list')
+        url = reverse('germination:germinationsetup-list')
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -436,13 +437,12 @@ class GerminationConditionViewSetTest(GerminationAPITestCase):
         self.authenticate_user(self.germinador_user)
         
         # Create another condition with different climate
-        GerminationCondition.objects.create(
-            climate='Exterior',
-            substrate='Turba',
-            location='Outdoor Location'
+        GerminationSetup.objects.create(
+            climate_condition=ClimateCondition.objects.create(climate='IW', notes='Test'),
+            setup_notes='Test setup'
         )
         
-        url = reverse('germination:germinationcondition-by-climate')
+        url = reverse('germination:germinationsetup-by-climate')
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -460,7 +460,7 @@ class GerminationConditionViewSetTest(GerminationAPITestCase):
             'humidity': 150  # Invalid
         }
         
-        url = reverse('germination:germinationcondition-list')
+        url = reverse('germination:germinationsetup-list')
         response = self.client.post(url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -486,7 +486,7 @@ class GerminationAPIPermissionsTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=1),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -495,7 +495,7 @@ class GerminationAPIPermissionsTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=2),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=15
         )
         
@@ -517,7 +517,7 @@ class GerminationAPIPermissionsTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=1),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10
         )
         
@@ -540,7 +540,7 @@ class GerminationAPIPermissionsTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=1),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=10,
             observations='First test record'
         )
@@ -559,7 +559,7 @@ class GerminationAPIPermissionsTest(GerminationAPITestCase):
             germination_date=date.today() - timedelta(days=2),
             plant=plant2,
             seed_source=self.seed_source,
-            germination_condition=self.germination_condition,
+            germination_setup=self.germination_setup,
             seeds_planted=15,
             observations='Second test record'
         )

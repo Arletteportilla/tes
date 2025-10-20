@@ -12,7 +12,8 @@ from unittest.mock import patch
 
 from authentication.models import CustomUser, Role
 from pollination.models import Plant, PollinationType, ClimateCondition, PollinationRecord
-from germination.models import SeedSource, GerminationCondition, GerminationRecord
+from germination.models import SeedSource, GerminationSetup, GerminationRecord
+from core.models import ClimateCondition
 from .statistics_services import StatisticsService, PollinationStatisticsService, GerminationStatisticsService
 
 
@@ -176,7 +177,7 @@ class StatisticsServiceTest(TestCase):
             germination_date=today - timedelta(days=25),
             plant=self.plant1,
             seed_source=self.seed_source1,
-            germination_condition=self.germ_condition,
+            germination_setup=self.germ_setup,
             seeds_planted=100,
             seedlings_germinated=85,
             observations='Test germination 1'
@@ -187,7 +188,7 @@ class StatisticsServiceTest(TestCase):
             germination_date=today - timedelta(days=10),
             plant=self.plant2,
             seed_source=self.seed_source2,
-            germination_condition=self.germ_condition,
+            germination_setup=self.germ_setup,
             seeds_planted=50,
             seedlings_germinated=40,
             observations='Test germination 2'
@@ -198,7 +199,7 @@ class StatisticsServiceTest(TestCase):
             germination_date=today - timedelta(days=2),
             plant=self.plant3,
             seed_source=self.seed_source1,
-            germination_condition=self.germ_condition,
+            germination_setup=self.germ_setup,
             seeds_planted=75,
             seedlings_germinated=60,
             observations='Test germination 3'
@@ -790,7 +791,7 @@ class GerminationStatisticsServiceTest(TestCase):
             germination_date=date.today() - timedelta(days=10),
             plant=self.plant,
             seed_source=self.seed_source,
-            germination_condition=self.germ_condition,
+            germination_setup=self.germ_setup,
             seeds_planted=100,
             seedlings_germinated=80
         )

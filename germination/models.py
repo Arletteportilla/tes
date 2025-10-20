@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from datetime import date, timedelta
-from core.models import BaseModel
+from core.models import BaseModel, ClimateCondition
 from authentication.models import CustomUser
 from pollination.models import Plant
 
@@ -90,84 +90,48 @@ class SeedSource(BaseModel):
             })
 
 
-class GerminationCondition(BaseModel):
+class GerminationSetup(BaseModel):
     """
-    Model representing the environmental conditions during germination.
-    Simplified climate tracking with predefined temperature ranges.
+    Model representing the climate setup conditions for germination.
+    References shared climate conditions for germination processes.
     """
-    CLIMATE_CHOICES = [
-        ('I', 'Intermedio'),
-        ('W', 'Caliente'),
-        ('C', 'Frío'),
-        ('IW', 'Intermedio Caliente'),
-        ('IC', 'Intermedio Frío'),
-    ]
     
-    SUBSTRATE_CHOICES = [
-        ('Turba', 'Turba'),
-        ('Perlita', 'Perlita'),
-        ('Vermiculita', 'Vermiculita'),
-        ('Corteza de pino', 'Corteza de pino'),
-        ('Musgo sphagnum', 'Musgo sphagnum'),
-        ('Mezcla personalizada', 'Mezcla personalizada'),
-    ]
-    
-    climate = models.CharField(
-        max_length=2,
-        choices=CLIMATE_CHOICES,
-        help_text="Tipo de clima durante la germinación"
-    )
-    substrate = models.CharField(
-        max_length=50,
-        choices=SUBSTRATE_CHOICES,
-        help_text="Tipo de sustrato utilizado"
-    )
-    location = models.CharField(
-        max_length=200,
-        help_text="Ubicación específica (vivero, mesa, etc.)"
+    # Reference to shared climate condition
+    climate_condition = models.ForeignKey(
+        ClimateCondition,
+        on_delete=models.PROTECT,
+        related_name='germination_setups',
+        help_text="Condición climática para la germinación"
     )
     
     # Additional details
-    substrate_details = models.TextField(
+    setup_notes = models.TextField(
         blank=True,
-        help_text="Detalles adicionales sobre el sustrato (proporciones, preparación, etc.)"
-    )
-    notes = models.TextField(
-        blank=True,
-        help_text="Observaciones adicionales sobre las condiciones"
+        help_text="Observaciones adicionales sobre la configuración de germinación"
     )
 
     class Meta:
-        verbose_name = "Condición de Germinación"
-        verbose_name_plural = "Condiciones de Germinación"
+        verbose_name = "Configuración de Germinación"
+        verbose_name_plural = "Configuraciones de Germinación"
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.get_climate_display()} - {self.substrate} - {self.location}"
+        return f"{self.climate_condition.get_climate_display()}"
+
+    @property
+    def climate_display(self):
+        """Get climate display name."""
+        return self.climate_condition.get_climate_display()
 
     @property
     def temperature_range(self):
-        """Get the temperature range for the climate type."""
-        ranges = {
-            'C': '10-18°C',
-            'IC': '18-22°C', 
-            'I': '22-26°C',
-            'IW': '26-30°C',
-            'W': '30-35°C'
-        }
-        return ranges.get(self.climate, 'No definido')
+        """Get temperature range from climate condition."""
+        return self.climate_condition.temperature_range
 
     @property
-    def description(self):
-        """Get detailed description of the climate condition."""
-        descriptions = {
-            'C': 'Clima frío, ideal para especies de alta montaña',
-            'IC': 'Clima intermedio frío, condiciones templadas',
-            'I': 'Clima intermedio, condiciones estándar',
-            'IW': 'Clima intermedio caliente, condiciones cálidas',
-            'W': 'Clima caliente, ideal para especies tropicales'
-        }
-        return descriptions.get(self.climate, 'Sin descripción')
+    def climate_description(self):
+        """Get climate description."""
+        return self.climate_condition.description
 
 
 class GerminationRecord(BaseModel):
@@ -204,12 +168,12 @@ class GerminationRecord(BaseModel):
         help_text="Fuente de las semillas utilizadas"
     )
     
-    # Germination conditions
-    germination_condition = models.ForeignKey(
-        GerminationCondition,
+    # Germination setup
+    germination_setup = models.ForeignKey(
+        GerminationSetup,
         on_delete=models.PROTECT,
         related_name='germination_records',
-        help_text="Condiciones ambientales de germinación"
+        help_text="Configuración de germinación utilizada"
     )
     
     # Quantities and results

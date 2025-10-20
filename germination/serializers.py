@@ -7,30 +7,33 @@ from rest_framework import serializers
 from django.core.exceptions import ValidationError as DjangoValidationError
 from datetime import date
 
-from .models import GerminationRecord, SeedSource, GerminationCondition
+from .models import (
+    SeedSource, GerminationSetup, GerminationRecord
+)
+from core.models import ClimateCondition
 from .services import GerminationValidationService
 from pollination.models import Plant
 from authentication.models import CustomUser
 
 
-class GerminationConditionSerializer(serializers.ModelSerializer):
+class GerminationSetupSerializer(serializers.ModelSerializer):
     """
-    Serializer for GerminationCondition model.
-    Handles environmental conditions during germination.
+    Serializer for GerminationSetup model.
+    Handles germination climate setup configuration.
     """
     
-    climate_display = serializers.CharField(source='get_climate_display', read_only=True)
+    climate_display = serializers.CharField(read_only=True)
     temperature_range = serializers.CharField(read_only=True)
-    description = serializers.CharField(read_only=True)
+    climate_description = serializers.CharField(read_only=True)
     
     class Meta:
-        model = GerminationCondition
+        model = GerminationSetup
         fields = [
-            'id', 'climate', 'climate_display', 'substrate', 'location', 
-            'temperature_range', 'description', 'substrate_details', 'notes',
+            'id', 'climate_condition', 'climate_display', 
+            'temperature_range', 'climate_description', 'setup_notes',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'climate_display', 'temperature_range', 'description']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'climate_display', 'temperature_range', 'climate_description']
 
 
 class SeedSourceSerializer(serializers.ModelSerializer):
@@ -81,7 +84,7 @@ class GerminationRecordSerializer(serializers.ModelSerializer):
     responsible_name = serializers.CharField(source='responsible.get_full_name', read_only=True)
     plant_details = serializers.SerializerMethodField()
     seed_source_details = serializers.SerializerMethodField()
-    germination_condition_details = serializers.SerializerMethodField()
+    germination_setup = GerminationSetupSerializer(read_only=True)
     transplant_status = serializers.CharField(read_only=True)
     germination_rate = serializers.SerializerMethodField()
     days_to_transplant = serializers.SerializerMethodField()
@@ -92,8 +95,8 @@ class GerminationRecordSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'responsible', 'responsible_name', 'germination_date',
             'estimated_transplant_date', 'plant', 'plant_details',
-            'seed_source', 'seed_source_details', 'germination_condition',
-            'germination_condition_details', 'seeds_planted', 'seedlings_germinated',
+            'seed_source', 'seed_source_details', 'germination_setup',
+            'seeds_planted', 'seedlings_germinated',
             'transplant_days', 'is_successful', 'transplant_confirmed',
             'transplant_confirmed_date', 'observations', 'transplant_status',
             'germination_rate', 'days_to_transplant', 'transplant_recommendations',
@@ -101,7 +104,7 @@ class GerminationRecordSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id', 'responsible', 'responsible_name', 'estimated_transplant_date', 'plant_details',
-            'seed_source_details', 'germination_condition_details', 'transplant_status',
+            'seed_source_details', 'transplant_status',
             'germination_rate', 'days_to_transplant', 'transplant_recommendations',
             'created_at', 'updated_at'
         ]
@@ -123,17 +126,6 @@ class GerminationRecordSerializer(serializers.ModelSerializer):
             'name': obj.seed_source.name,
             'source_type': obj.seed_source.source_type,
             'source_type_display': obj.seed_source.get_source_type_display()
-        }
-    
-    def get_germination_condition_details(self, obj):
-        """Get germination condition details."""
-        return {
-            'id': obj.germination_condition.id,
-            'climate': obj.germination_condition.climate,
-            'substrate': obj.germination_condition.substrate,
-            'location': obj.germination_condition.location,
-            'temperature': obj.germination_condition.temperature,
-            'humidity': obj.germination_condition.humidity
         }
     
     def get_germination_rate(self, obj):
@@ -311,18 +303,16 @@ class SeedSourceListSerializer(serializers.ModelSerializer):
         ]
 
 
-class GerminationConditionListSerializer(serializers.ModelSerializer):
+class GerminationSetupListSerializer(serializers.ModelSerializer):
     """
-    Simplified serializer for germination condition listings.
+    Simplified serializer for germination setup listings.
     Used in dropdown selections and list views.
     """
-    climate_display = serializers.CharField(source='get_climate_display', read_only=True)
-    substrate_display = serializers.CharField(source='get_substrate_display', read_only=True)
+    climate_display = serializers.CharField(read_only=True)
     temperature_range = serializers.CharField(read_only=True)
     
     class Meta:
-        model = GerminationCondition
+        model = GerminationSetup
         fields = [
-            'id', 'climate', 'climate_display', 'substrate', 'substrate_display',
-            'location', 'temperature_range'
+            'id', 'climate_condition', 'climate_display', 'temperature_range'
         ]
